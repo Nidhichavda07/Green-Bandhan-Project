@@ -167,3 +167,5 @@ AIzaSyD6fTSwlWgsI9e2eIRz2BPXrqAxcTzid3c
 
 
 npm install eslint-plugin-jsx-a11y --save-dev
+npm install react-router-dom
+npm install react-leaflet leaflet

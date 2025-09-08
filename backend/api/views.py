@@ -25,6 +25,9 @@ class LoginAPIView(APIView):
         if serializer.is_valid():
             user = serializer.validated_data
             user_data = UserSerializer(user).data
+            # Ensure admin staff/superusers are labeled as 'admin'
+            if getattr(user, 'is_superuser', False) or getattr(user, 'is_staff', False):
+                user_data['role'] = 'admin'
             return Response(user_data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -67,3 +70,25 @@ def current_user(request):
         "username": user.username,
         "email": user.email
     })
+
+
+# parks & campaigns
+from .models import Park, Campaign
+from .serializers import ParkSerializer, CampaignSerializer
+
+class ParkViewSet(viewsets.ModelViewSet):
+    queryset = Park.objects.all().order_by('-created_at')
+    serializer_class = ParkSerializer
+    permission_classes = [permissions.AllowAny]
+
+
+class CampaignViewSet(viewsets.ModelViewSet):
+    queryset = Campaign.objects.all().order_by('-created_at')
+    serializer_class = CampaignSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def perform_create(self, serializer):
+        organizer = self.request.user
+        if not organizer.is_authenticated:
+            organizer = User.objects.filter(is_staff=True).first() or User.objects.first()
+        serializer.save(organizer=organizer)

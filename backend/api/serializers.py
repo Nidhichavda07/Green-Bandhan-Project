@@ -59,3 +59,20 @@ class WasteReportSerializer(serializers.ModelSerializer):
         model = WasteReport
         fields = '__all__'
 
+
+# parks
+from .models import Park, Campaign
+
+class ParkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Park
+        fields = '__all__'
+
+
+class CampaignSerializer(serializers.ModelSerializer):
+    organizer_username = serializers.CharField(source='organizer.username', read_only=True)
+
+    class Meta:
+        model = Campaign
+        fields = '__all__'
+

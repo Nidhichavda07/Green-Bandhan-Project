@@ -1,9 +1,13 @@
 // MainPage.js
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import '../output.css';
 import { Link } from 'react-router-dom';
 
 const MainPage = ({ user }) => {
+  const location = useLocation();
+  const userFromState = location.state && location.state.user ? location.state.user : null;
+  const effectiveUser = user || userFromState || { username: 'Guest', role: 'guest' };
 
   const handleLogout = () => {
     // Clear user session or redirect to landing page
@@ -32,7 +36,7 @@ const MainPage = ({ user }) => {
 
             {/* Right: User Info */}
             <div className="flex items-center space-x-4">
-              <span className="text-gray-700 font-medium">Hello, {user.username}</span>
+              <span className="text-gray-700 font-medium">Hello, {effectiveUser.username}</span>
               <button 
                 onClick={handleLogout} 
                 className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition duration-200"
@@ -53,9 +57,9 @@ const MainPage = ({ user }) => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <div className="bg-white shadow-lg rounded-lg p-8 text-center">
-          <h2 className="text-3xl font-bold text-green-700 mb-6">Welcome, {user.username}!</h2>
+          <h2 className="text-3xl font-bold text-green-700 mb-6">Welcome, {effectiveUser.username}!</h2>
           <p className="text-gray-700 text-lg mb-2">
-            Role: <span className="font-semibold">{user.role}</span>
+            Role: <span className="font-semibold">{effectiveUser.role}</span>
           </p>
           <p className="text-gray-600 text-md">This is your main dashboard after registration.</p>
         </div>
