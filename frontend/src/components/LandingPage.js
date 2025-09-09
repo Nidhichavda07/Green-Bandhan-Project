@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Register from './Register';
 import Login from './Login';
 import { FaLeaf, FaHandsHelping, FaRecycle } from 'react-icons/fa';
@@ -28,6 +28,44 @@ const AccordionItem = ({ question, answer }) => {
 };
 
 /* ---------------------- Landing Page ---------------------- */
+const BlogFeed = () => {
+  const [blogs, setBlogs] = useState([]);
+  useEffect(() => {
+    const fetchBlogs = async () => {
+      try {
+        const res = await fetch('http://127.0.0.1:8000/api/blogs/?page_size=3');
+        if (!res.ok) throw new Error('Failed to load blogs');
+        const data = await res.json();
+        setBlogs(Array.isArray(data) ? data.slice(0, 3) : data.results || []);
+      } catch (e) {
+        setBlogs([]);
+      }
+    };
+    fetchBlogs();
+  }, []);
+
+  if (!blogs || blogs.length === 0) {
+    return (
+      <div className="text-center text-gray-500">No posts yet.</div>
+    );
+  }
+
+  const latest = blogs[0];
+  return (
+    <div>
+      <div className="border rounded-lg p-6 shadow-sm hover:shadow-md transition">
+        {latest.image && (
+          <img src={latest.image} alt="" className="mb-4 w-full h-56 object-cover rounded" />
+        )}
+        <h3 className="text-2xl font-semibold text-gray-800 mb-2">{latest.title}</h3>
+        <div className="text-sm text-gray-500 mb-3">{latest.category || 'General'} • {new Date(latest.created_at).toLocaleDateString()}</div>
+        <p className="text-gray-700 mb-4">{(latest.content || '').slice(0, 240)}{(latest.content || '').length > 240 ? '…' : ''}</p>
+        <a href="/blogs" className="inline-block text-green-700 font-semibold hover:underline">Read more on our Blog →</a>
+      </div>
+    </div>
+  );
+};
+
 const LandingPage = () => {
   const [page, setPage] = useState('landing'); // landing, register, login
 
@@ -68,6 +106,8 @@ const LandingPage = () => {
                 <a href="#home" className="text-gray-700 hover:text-green-700">Home</a>
                 <a href="#about" className="text-gray-700 hover:text-green-700">About</a>
                 <a href="#features" className="text-gray-700 hover:text-green-700">Features</a>
+                <a href="/blogs" className="text-gray-700 hover:text-green-700">Blog</a>
+                <a href="#contact" className="text-gray-700 hover:text-green-700">Contact</a>
                 <a href="#cta" className="text-gray-700 hover:text-green-700">Get Started</a>
               </div>
             </div>
@@ -174,6 +214,36 @@ const LandingPage = () => {
         </div>
       </section>
 
+
+      {/* Blog Section (dynamic) */}
+      <section id="blog" className="py-20 bg-white">
+        <div className="max-w-6xl mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-10 text-green-700">Latest from our Blog</h2>
+          <BlogFeed />
+        </div>
+      </section>
+
+      {/* Contact Section */}
+      <section id="contact" className="py-20 bg-gray-50">
+        <div className="max-w-3xl mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-8 text-green-700">Contact Us</h2>
+          <p className="text-center text-gray-600 mb-8">Have a question or want to collaborate? Send us a message.</p>
+          <form className="bg-white border rounded-xl shadow p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input type="text" placeholder="Your Name" className="border rounded px-4 py-3 md:col-span-1" required />
+            <input type="email" placeholder="Your Email" className="border rounded px-4 py-3 md:col-span-1" required />
+            <input type="text" placeholder="Subject" className="border rounded px-4 py-3 md:col-span-2" required />
+            <textarea placeholder="Your Message" rows="4" className="border rounded px-4 py-3 md:col-span-2" required />
+            <div className="md:col-span-2 flex justify-center">
+              <button type="submit" className="bg-green-700 text-white px-6 py-3 rounded hover:bg-green-800 transition">
+                Send Message
+              </button>
+            </div>
+          </form>
+          <div className="text-center text-sm text-gray-500 mt-4">
+            Or email us at <a href="mailto:hello@greenbandhan.org" className="text-green-700 underline">hello@greenbandhan.org</a>
+          </div>
+        </div>
+      </section>
 
       {/* Call to Action Section */}
       <section id="cta" className="py-20 text-center bg-green-50">

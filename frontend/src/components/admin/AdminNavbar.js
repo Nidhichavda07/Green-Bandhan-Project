@@ -42,7 +42,7 @@ const AdminNavbar = ({ title = 'Admin', onLogout }) => {
               Donations
             </NavLink>
             <NavLink
-              to="/wastereport"
+              to="/admin/waste-reports"
               className={({ isActive }) =>
                 `text-base ${isActive ? 'text-green-700 font-semibold' : 'text-gray-700 hover:text-green-700'}`
               }
@@ -50,12 +50,12 @@ const AdminNavbar = ({ title = 'Admin', onLogout }) => {
               Waste Reports
             </NavLink>
             <NavLink
-              to="/admin/waste-reports"
+              to="/admin/blogs"
               className={({ isActive }) =>
                 `text-base ${isActive ? 'text-green-700 font-semibold' : 'text-gray-700 hover:text-green-700'}`
               }
             >
-              Admin Waste
+              Blogs
             </NavLink>
           </div>
 

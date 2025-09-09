@@ -152,6 +152,8 @@ class Donation(models.Model):
     description = models.TextField()
     quantity = models.IntegerField(default=1)  # Optional
     pickup_address = models.TextField()
+    pickup_latitude = models.FloatField(null=True, blank=True)
+    pickup_longitude = models.FloatField(null=True, blank=True)
     contact_number = models.CharField(max_length=20, null=True, blank=True)
     preferred_pickup_time = models.DateTimeField(null=True, blank=True)
     notes = models.TextField(null=True, blank=True)
@@ -181,3 +183,17 @@ class ImpactScore(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - Level {self.level} ({self.points} points)"
+
+
+class Blog(models.Model):
+    """Simple blog post model for landing page content"""
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='blogs')
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    category = models.CharField(max_length=100, blank=True, null=True)
+    image = models.ImageField(upload_to='blog_images/', null=True, blank=True)
+    is_published = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.title} by {self.author.username}"

@@ -23,7 +23,11 @@ const Donations = () => {
     quantity: 1,
     contact_number: "",
     preferred_pickup_time: "",
+    pickup_latitude: "",
+    pickup_longitude: "",
+    notes: "",
   });
+  const [imageFile, setImageFile] = useState(null);
 
   const navigate = useNavigate();
 
@@ -61,16 +65,41 @@ const Donations = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://127.0.0.1:8000/api/donations/", {
-        donor: user.id,
+      const token = localStorage.getItem('access_token');
+      const body = new FormData();
+      body.append('donation_type', selectedType);
+      body.append('description', formData.description);
+      body.append('pickup_address', formData.pickup_address);
+      body.append('quantity', formData.quantity);
+      body.append('contact_number', formData.contact_number);
+      if (formData.preferred_pickup_time) body.append('preferred_pickup_time', formData.preferred_pickup_time);
+      if (formData.notes) body.append('notes', formData.notes);
+      if (formData.pickup_latitude && formData.pickup_latitude.trim() !== "") body.append('pickup_latitude', parseFloat(formData.pickup_latitude));
+      if (formData.pickup_longitude && formData.pickup_longitude.trim() !== "") body.append('pickup_longitude', parseFloat(formData.pickup_longitude));
+      if (imageFile) body.append('image', imageFile);
+      body.append('status', 'pending');
+
+      console.log('Submitting donation with data:', {
         donation_type: selectedType,
         description: formData.description,
         pickup_address: formData.pickup_address,
         quantity: formData.quantity,
         contact_number: formData.contact_number,
         preferred_pickup_time: formData.preferred_pickup_time,
-        status: "pending",
+        notes: formData.notes,
+        pickup_latitude: formData.pickup_latitude,
+        pickup_longitude: formData.pickup_longitude,
+        image: imageFile ? 'File selected' : 'No file'
       });
+
+      const response = await axios.post("http://127.0.0.1:8000/api/donations/", body, {
+        headers: { 
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          'Content-Type': 'multipart/form-data'
+        },
+      });
+      
+      console.log('Donation submitted successfully:', response.data);
       alert("Donation submitted successfully!");
       setShowForm(false);
       setFormData({
@@ -79,12 +108,93 @@ const Donations = () => {
         quantity: 1,
         contact_number: "",
         preferred_pickup_time: "",
+        pickup_latitude: "",
+        pickup_longitude: "",
+        notes: "",
       });
+      setImageFile(null);
       fetchDonations();
     } catch (err) {
-      console.error(err);
-      alert("Failed to submit donation.");
+      console.error('Donation submission error:', err);
+      console.error('Error response:', err.response?.data);
+      console.error('Error status:', err.response?.status);
+      
+      let errorMessage = "Failed to submit donation.";
+      if (err.response?.data) {
+        if (typeof err.response.data === 'object') {
+          const errors = Object.values(err.response.data).flat();
+          errorMessage = `Error: ${errors.join(', ')}`;
+        } else {
+          errorMessage = `Error: ${err.response.data}`;
+        }
+      } else if (err.message) {
+        errorMessage = `Error: ${err.message}`;
+      }
+      
+      alert(errorMessage);
     }
+  };
+
+  const useMyLocation = () => {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by your browser. Please enter coordinates manually.');
+      return;
+    }
+    
+    // Show loading state
+    const button = document.querySelector('[data-location-button]');
+    if (button) {
+      button.textContent = '📍 Getting location...';
+      button.disabled = true;
+    }
+    
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setFormData((d) => ({ 
+          ...d, 
+          pickup_latitude: latitude.toFixed(6), 
+          pickup_longitude: longitude.toFixed(6) 
+        }));
+        
+        // Reset button
+        if (button) {
+          button.textContent = '📍 Use my current location';
+          button.disabled = false;
+        }
+        
+        alert(`Location found! Coordinates: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+      },
+      (error) => {
+        // Reset button
+        if (button) {
+          button.textContent = '📍 Use my current location';
+          button.disabled = false;
+        }
+        
+        let message = 'Unable to retrieve your location. ';
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            message += 'Please allow location access in your browser settings and try again.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            message += 'Location information is unavailable. Please enter coordinates manually.';
+            break;
+          case error.TIMEOUT:
+            message += 'Location request timed out. Please try again or enter coordinates manually.';
+            break;
+          default:
+            message += 'Please enter coordinates manually.';
+            break;
+        }
+        alert(message);
+      },
+      { 
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000
+      }
+    );
   };
 
   if (loading) return <p className="text-center mt-10 text-gray-700">Loading donations...</p>;
@@ -158,10 +268,12 @@ const Donations = () => {
               <img src={donationImages[donation.donation_type] || donationImages["other"]} alt={donation.donation_type} className="w-full h-48 object-contain bg-gray-50" />
               <div className="p-6">
                 <h3 className="text-xl font-bold mb-2 capitalize text-green-700">{donation.donation_type}</h3>
-                <p className="text-gray-700 mb-1"><span className="font-semibold">Donor:</span> {donation.donor.username}</p>
-                {donation.volunteer && <p className="text-gray-700 mb-1"><span className="font-semibold">Volunteer:</span> {donation.volunteer.username}</p>}
+                <p className="text-gray-700 mb-1"><span className="font-semibold">Donor:</span> {donation.donor_username || 'Donor'}</p>
                 <p className="text-gray-700 mb-1"><span className="font-semibold">Status:</span> {donation.status}</p>
                 <p className="text-gray-600 mb-1"><span className="font-semibold">Pickup Address:</span> {donation.pickup_address}</p>
+                {(donation.pickup_latitude || donation.pickup_longitude) && (
+                  <p className="text-gray-600 mb-1"><span className="font-semibold">Pickup Coords:</span> {donation.pickup_latitude ?? '–'}, {donation.pickup_longitude ?? '–'}</p>
+                )}
                 <p className="text-gray-500 text-sm mt-2">Created at: {new Date(donation.created_at).toLocaleString()}</p>
               </div>
             </div>
@@ -171,57 +283,162 @@ const Donations = () => {
 
       {/* Popup Form */}
       {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-8 rounded-xl shadow-lg w-96">
-            <h2 className="text-2xl font-bold mb-4 text-green-700">Donate {selectedType}</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <input
-                type="number"
-                name="quantity"
-                value={formData.quantity}
-                onChange={handleChange}
-                placeholder="Quantity"
-                className="w-full border border-gray-300 p-2 rounded-md"
-                min={1}
-                required
-              />
-              <input
-                type="text"
-                name="contact_number"
-                value={formData.contact_number}
-                onChange={handleChange}
-                placeholder="Contact Number"
-                className="w-full border border-gray-300 p-2 rounded-md"
-                required
-              />
-              <input
-                type="datetime-local"
-                name="preferred_pickup_time"
-                value={formData.preferred_pickup_time}
-                onChange={handleChange}
-                className="w-full border border-gray-300 p-2 rounded-md"
-              />
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                placeholder="Enter donation details"
-                className="w-full border border-gray-300 p-2 rounded-md"
-                required
-              />
-              <textarea
-                name="pickup_address"
-                value={formData.pickup_address}
-                onChange={handleChange}
-                placeholder="Enter pickup address"
-                className="w-full border border-gray-300 p-2 rounded-md"
-                required
-              />
-              <div className="flex justify-end space-x-3">
-                <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400">Cancel</button>
-                <button type="submit" className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Submit</button>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-3xl font-bold text-green-700">Donate {selectedType}</h2>
+                <button onClick={() => setShowForm(false)} className="text-gray-500 hover:text-gray-700 text-2xl">×</button>
               </div>
-            </form>
+              
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Basic Information */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-green-700 border-b pb-2">Basic Information</h3>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Quantity *</label>
+                      <input
+                        type="number"
+                        name="quantity"
+                        value={formData.quantity}
+                        onChange={handleChange}
+                        placeholder="How many items?"
+                        className="w-full border border-gray-300 p-3 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        min={1}
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number *</label>
+                      <input
+                        type="text"
+                        name="contact_number"
+                        value={formData.contact_number}
+                        onChange={handleChange}
+                        placeholder="Your phone number"
+                        className="w-full border border-gray-300 p-3 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Preferred Pickup Time</label>
+                      <input
+                        type="datetime-local"
+                        name="preferred_pickup_time"
+                        value={formData.preferred_pickup_time}
+                        onChange={handleChange}
+                        className="w-full border border-gray-300 p-3 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                      <textarea
+                        name="description"
+                        value={formData.description}
+                        onChange={handleChange}
+                        placeholder="Describe what you're donating..."
+                        className="w-full border border-gray-300 p-3 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        rows="3"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Notes (Optional)</label>
+                      <textarea
+                        name="notes"
+                        value={formData.notes}
+                        onChange={handleChange}
+                        placeholder="Any additional notes..."
+                        className="w-full border border-gray-300 p-3 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        rows="2"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Location Information */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-green-700 border-b pb-2">Location Information</h3>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Pickup Address *</label>
+                      <textarea
+                        name="pickup_address"
+                        value={formData.pickup_address}
+                        onChange={handleChange}
+                        placeholder="Full address where items can be picked up"
+                        className="w-full border border-gray-300 p-3 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        rows="2"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Pickup Coordinates (Optional)</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <input 
+                          type="text" 
+                          name="pickup_latitude" 
+                          value={formData.pickup_latitude} 
+                          onChange={handleChange} 
+                          placeholder="Latitude" 
+                          className="border border-gray-300 p-3 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500" 
+                        />
+                        <input 
+                          type="text" 
+                          name="pickup_longitude" 
+                          value={formData.pickup_longitude} 
+                          onChange={handleChange} 
+                          placeholder="Longitude" 
+                          className="border border-gray-300 p-3 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500" 
+                        />
+                      </div>
+                      <button 
+                        type="button" 
+                        onClick={useMyLocation} 
+                        data-location-button
+                        className="w-full mt-2 bg-green-100 text-green-700 px-4 py-2 rounded-md hover:bg-green-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        📍 Use my current location
+                      </button>
+                    </div>
+
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Photo (Optional)</label>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={(e)=>setImageFile(e.target.files && e.target.files[0] ? e.target.files[0] : null)} 
+                        className="w-full border border-gray-300 p-3 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500" 
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Upload a photo of the items you're donating</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end space-x-4 pt-6 border-t">
+                  <button 
+                    type="button" 
+                    onClick={() => setShowForm(false)} 
+                    className="px-6 py-3 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                  >
+                    Submit Donation
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}

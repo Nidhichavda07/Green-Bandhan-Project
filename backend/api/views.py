@@ -41,6 +41,12 @@ class DonationViewSet(viewsets.ModelViewSet):
     queryset = Donation.objects.all().order_by('-created_at')
     serializer_class = DonationSerializer
 
+    def perform_create(self, serializer):
+        donor = self.request.user
+        if not getattr(donor, 'is_authenticated', False):
+            donor = User.objects.filter(is_staff=True).first() or User.objects.first()
+        serializer.save(donor=donor)
+
 
 #  waste report
 
@@ -73,8 +79,8 @@ def current_user(request):
 
 
 # parks & campaigns
-from .models import Park, Campaign
-from .serializers import ParkSerializer, CampaignSerializer
+from .models import Park, Campaign, Blog
+from .serializers import ParkSerializer, CampaignSerializer, BlogSerializer
 
 class ParkViewSet(viewsets.ModelViewSet):
     queryset = Park.objects.all().order_by('-created_at')
@@ -92,3 +98,15 @@ class CampaignViewSet(viewsets.ModelViewSet):
         if not organizer.is_authenticated:
             organizer = User.objects.filter(is_staff=True).first() or User.objects.first()
         serializer.save(organizer=organizer)
+
+
+class BlogViewSet(viewsets.ModelViewSet):
+    queryset = Blog.objects.all().order_by('-created_at')
+    serializer_class = BlogSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def perform_create(self, serializer):
+        author = self.request.user
+        if not author.is_authenticated:
+            author = User.objects.filter(is_staff=True).first() or User.objects.first()
+        serializer.save(author=author)

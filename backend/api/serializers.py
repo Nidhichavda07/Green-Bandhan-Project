@@ -61,7 +61,7 @@ class WasteReportSerializer(serializers.ModelSerializer):
 
 
 # parks
-from .models import Park, Campaign
+from .models import Park, Campaign, Blog
 
 class ParkSerializer(serializers.ModelSerializer):
     class Meta:
@@ -74,5 +74,13 @@ class CampaignSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Campaign
+        fields = '__all__'
+
+
+class BlogSerializer(serializers.ModelSerializer):
+    author_username = serializers.CharField(source='author.username', read_only=True)
+
+    class Meta:
+        model = Blog
         fields = '__all__'
 
