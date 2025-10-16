@@ -55,7 +55,7 @@ const AdminCampaigns = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(token ? { Authorization: `Token ${token}` } : {}),
         },
         body: JSON.stringify(form),
       });

@@ -18,6 +18,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import LoginSerializer, UserSerializer
+from rest_framework.authtoken.models import Token
 
 class LoginAPIView(APIView):
     def post(self, request):
@@ -25,6 +26,8 @@ class LoginAPIView(APIView):
         if serializer.is_valid():
             user = serializer.validated_data
             user_data = UserSerializer(user).data
+            token, _ = Token.objects.get_or_create(user=user)
+            user_data['access_token'] = token.key
             # Ensure admin staff/superusers are labeled as 'admin'
             if getattr(user, 'is_superuser', False) or getattr(user, 'is_staff', False):
                 user_data['role'] = 'admin'
@@ -57,10 +60,13 @@ from .serializers import WasteReportSerializer
 class WasteReportViewSet(viewsets.ModelViewSet):
     queryset = WasteReport.objects.all().order_by('-created_at')
     serializer_class = WasteReportSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.AllowAny]
 
     def perform_create(self, serializer):
-        serializer.save(reporter=self.request.user)
+        reporter = self.request.user
+        if not getattr(reporter, 'is_authenticated', False):
+            reporter = User.objects.filter(is_staff=True).first() or User.objects.first()
+        serializer.save(reporter=reporter)
 
 
 from rest_framework.decorators import api_view, permission_classes

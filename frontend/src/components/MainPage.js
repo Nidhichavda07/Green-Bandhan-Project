@@ -1,17 +1,19 @@
 // MainPage.js
-import React from 'react';
+import React, { useContext } from 'react';
 import { useLocation } from 'react-router-dom';
 import '../output.css';
 import { Link } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 
 const MainPage = ({ user }) => {
+  const { user: authUser, logout } = useContext(AuthContext);
   const location = useLocation();
   const userFromState = location.state && location.state.user ? location.state.user : null;
-  const effectiveUser = user || userFromState || { username: 'Guest', role: 'guest' };
+  const effectiveUser = authUser || user || userFromState || { username: 'Guest', role: 'guest' };
 
   const handleLogout = () => {
-    // Clear user session or redirect to landing page
-    window.location.reload();
+    logout();
+    window.location.href = '/';
   };
 
   return (
@@ -26,10 +28,10 @@ const MainPage = ({ user }) => {
             <div className="flex items-center space-x-8">
               <span className="font-bold text-2xl text-green-700">GreenBandhan</span>
               <div className="hidden md:flex space-x-6">
-                <a href="#" className="text-gray-700 hover:text-green-700 font-medium transition">Home</a>
-                <a href="#" className="text-gray-700 hover:text-green-700 font-medium transition">Campaigns</a>
-                <a href="/park" className="text-gray-700 hover:text-green-700 font-medium transition">Parks</a>
-                <a href="/wastereport" className="text-gray-700 hover:text-green-700 font-medium transition">Reports</a>
+                <Link to="/" className="text-gray-700 hover:text-green-700 font-medium transition">Home</Link>
+                <Link to="/campaigns" className="text-gray-700 hover:text-green-700 font-medium transition">Campaigns</Link>
+                <Link to="/park" className="text-gray-700 hover:text-green-700 font-medium transition">Parks</Link>
+                <Link to="/wastereport" className="text-gray-700 hover:text-green-700 font-medium transition">Reports</Link>
                 <Link to="/donations" className="text-gray-700 hover:text-green-700 font-medium transition">Donations</Link>
               </div>
             </div>

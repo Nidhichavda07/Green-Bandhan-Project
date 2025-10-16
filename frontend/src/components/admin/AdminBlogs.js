@@ -57,7 +57,7 @@ const AdminBlogs = () => {
       const res = await fetch('http://127.0.0.1:8000/api/blogs/', {
         method: 'POST',
         headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(token ? { Authorization: `Token ${token}` } : {}),
         },
         body: formData,
       });
@@ -102,7 +102,7 @@ const AdminBlogs = () => {
       const res = await fetch(`http://127.0.0.1:8000/api/blogs/${id}/`, {
         method: 'PATCH',
         headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(token ? { Authorization: `Token ${token}` } : {}),
         },
         body: formData,
       });
@@ -126,7 +126,7 @@ const AdminBlogs = () => {
       const res = await fetch(`http://127.0.0.1:8000/api/blogs/${id}/`, {
         method: 'DELETE',
         headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(token ? { Authorization: `Token ${token}` } : {}),
         }
       });
       if (!res.ok && res.status !== 204) throw new Error('Failed to delete');

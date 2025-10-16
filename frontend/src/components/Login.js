@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { login } = useContext(AuthContext);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -20,8 +22,9 @@ const Login = () => {
       if (!response.ok) {
         throw new Error(data.non_field_errors || 'Login failed');
       }
-      localStorage.setItem('access_token', data.access_token);
       const user = { username: data.username, role: data.role, address: data.address };
+      // persist via auth context
+      login(user, data.access_token);
       if (data.role === 'admin') {
         navigate('/admin-dashboard', { state: { user } });
       } else {

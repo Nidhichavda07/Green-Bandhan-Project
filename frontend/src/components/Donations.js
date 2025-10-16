@@ -94,7 +94,7 @@ const Donations = () => {
 
       const response = await axios.post("http://127.0.0.1:8000/api/donations/", body, {
         headers: { 
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(token ? { Authorization: `Token ${token}` } : {}),
           'Content-Type': 'multipart/form-data'
         },
       });
@@ -299,53 +299,53 @@ const Donations = () => {
                     
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Quantity *</label>
-                      <input
-                        type="number"
-                        name="quantity"
-                        value={formData.quantity}
-                        onChange={handleChange}
+              <input
+                type="number"
+                name="quantity"
+                value={formData.quantity}
+                onChange={handleChange}
                         placeholder="How many items?"
                         className="w-full border border-gray-300 p-3 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                        min={1}
-                        required
-                      />
+                min={1}
+                required
+              />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number *</label>
-                      <input
-                        type="text"
-                        name="contact_number"
-                        value={formData.contact_number}
-                        onChange={handleChange}
+              <input
+                type="text"
+                name="contact_number"
+                value={formData.contact_number}
+                onChange={handleChange}
                         placeholder="Your phone number"
                         className="w-full border border-gray-300 p-3 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                        required
-                      />
+                required
+              />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Preferred Pickup Time</label>
-                      <input
-                        type="datetime-local"
-                        name="preferred_pickup_time"
-                        value={formData.preferred_pickup_time}
-                        onChange={handleChange}
+              <input
+                type="datetime-local"
+                name="preferred_pickup_time"
+                value={formData.preferred_pickup_time}
+                onChange={handleChange}
                         className="w-full border border-gray-300 p-3 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                      />
+              />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
-                      <textarea
-                        name="description"
-                        value={formData.description}
-                        onChange={handleChange}
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
                         placeholder="Describe what you're donating..."
                         className="w-full border border-gray-300 p-3 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
                         rows="3"
-                        required
-                      />
+                required
+              />
                     </div>
 
                     <div>
@@ -367,15 +367,15 @@ const Donations = () => {
                     
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Pickup Address *</label>
-                      <textarea
-                        name="pickup_address"
-                        value={formData.pickup_address}
-                        onChange={handleChange}
+              <textarea
+                name="pickup_address"
+                value={formData.pickup_address}
+                onChange={handleChange}
                         placeholder="Full address where items can be picked up"
                         className="w-full border border-gray-300 p-3 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
                         rows="2"
-                        required
-                      />
+                required
+              />
                     </div>
 
                     <div>
@@ -436,8 +436,8 @@ const Donations = () => {
                   >
                     Submit Donation
                   </button>
-                </div>
-              </form>
+              </div>
+            </form>
             </div>
           </div>
         </div>

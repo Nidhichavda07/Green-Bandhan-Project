@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { useContext } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './components/LandingPage';
 import Donations from './components/Donations';
 import MainPage from './components/MainPage';
@@ -14,27 +14,37 @@ import Blogs from './components/Blogs';
 import WasteReport from './components/WasteReport';
 import Park from './components/citizen/Parks';
 import ParkDetails from './components/citizen/ParkDetails';
+import { AuthContext } from './context/AuthContext';
 
+
+function PrivateRoute({ children }) {
+  const { isAuthenticated } = useContext(AuthContext);
+  return isAuthenticated ? children : <Navigate to="/login" replace />;
+}
 
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/donations" element={<Donations />} />
-        <Route path="/main" element={<MainPage />} />
-        <Route path="/wastereport" element={<WasteReport />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/park" element={<Park />} />
-        <Route path="/parks" element={<Park />} />
-        <Route path="/parks/:id" element={<ParkDetails />} />
-        <Route path="/admin-dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/parks" element={<AdminParks />} />
-        <Route path="/admin/campaigns" element={<AdminCampaigns />} />
-        <Route path="/admin/donations" element={<AdminDonations />} />
-        <Route path="/admin/waste-reports" element={<AdminWasteReports />} />
-        <Route path="/admin/blogs" element={<AdminBlogs />} />
         <Route path="/blogs" element={<Blogs />} />
+        <Route path="/parks" element={<Park />} />
+        <Route path="/park" element={<Park />} />
+        <Route path="/parks/:id" element={<ParkDetails />} />
+
+        {/* Citizen-protected routes */}
+        <Route path="/main" element={<PrivateRoute><MainPage /></PrivateRoute>} />
+        <Route path="/donations" element={<PrivateRoute><Donations /></PrivateRoute>} />
+        <Route path="/wastereport" element={<PrivateRoute><WasteReport /></PrivateRoute>} />
+
+        {/* Admin-protected routes (reuse same guard; refine by role if needed) */}
+        <Route path="/admin-dashboard" element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
+        <Route path="/admin/parks" element={<PrivateRoute><AdminParks /></PrivateRoute>} />
+        <Route path="/admin/campaigns" element={<PrivateRoute><AdminCampaigns /></PrivateRoute>} />
+        <Route path="/admin/donations" element={<PrivateRoute><AdminDonations /></PrivateRoute>} />
+        <Route path="/admin/waste-reports" element={<PrivateRoute><AdminWasteReports /></PrivateRoute>} />
+        <Route path="/admin/blogs" element={<PrivateRoute><AdminBlogs /></PrivateRoute>} />
       </Routes>
     </Router>
   );
